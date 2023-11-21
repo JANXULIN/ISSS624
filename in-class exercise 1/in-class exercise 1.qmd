@@ -1,10 +1,10 @@
+
 ---
-title: "In-class exercise 1 demo"
+title: "in-class exercise 1 demo"
 author: "xu lin"
-data: 2023-11-18
-data-format: long
-data-modified: "last-modified"
+date: 2023-11-18
 ---
+
 
 ##getting start
 
