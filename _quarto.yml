@@ -7,9 +7,16 @@ website:
     left: 
       - text: Hands-on Exercise 
         menu: 
-        - text: Hands-on Exercise 1
-          href: hands-on_ex1/hands-on_ex.html
-          
+        - text: hands-on Exercise 1
+          href: hands-on exercise 1/hands-on exercise 1.html
+        - text: hands-on exercise 2 
+          href: hands-on exercise 2/hands-on exercise 2.html
+      - text: In-calss Exercise 
+        menu: 
+          - text: in-class exercise 1
+            href: in-class exercise 1/in-class exercise 1.qmd
+      - text: take home exercise 
+      
     right:
       - href: index.qmd
         text: Home
