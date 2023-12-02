@@ -11,12 +11,18 @@ website:
           href: hands-on exercise 1/hands-on exercise 1.html
         - text: hands-on exercise 2 
           href: hands-on exercise 2/hands-on exercise 2.html
+        - text: hands-on exercise 3 
+          href: hands-on exercise 3/hands-on exercise 3.html
       - text: In-calss Exercise 
         menu: 
           - text: in-class exercise 1
             href: in-class exercise 1/in-class exercise 1.qmd
+          - text: in-class exercise 2
+            href: in-class exercise 2/in-class exercise 2.qmd           
       - text: take home exercise 
-      
+        menu: 
+          - text: take home exercise 1 
+            href: take home exercise 1/take home exercise 1.html
     right:
       - href: index.qmd
         text: Home
