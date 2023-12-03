@@ -6,6 +6,7 @@ author: "XU LIN"
 # Overview
 
 # Getting Started
+
 ```{r}
 pacman::p_load(tmap, sf, DT, stplanr,
                performance,
@@ -15,6 +16,7 @@ pacman::p_load(tmap, sf, DT, stplanr,
 # Preparing the Flow Data
 
 ## Importing the OD data
+
 ```{r}
 odbus <- read_csv("data/aspatial/origin_destination_bus_202310.csv")
 ```
@@ -29,6 +31,7 @@ odbus$DESTINATION_PT_CODE <- as.factor(odbus$DESTINATION_PT_CODE)
 ```
 
 ## Extracting the study data
+
 ```{r}
 odbus6_9 <- odbus %>%
   filter(DAY_TYPE == "WEEKDAY") %>%
@@ -69,6 +72,9 @@ mpsz
 ```
 
 # Geospatial data wrangling
+```{r}
+mpsz <- write_rds(mpsz, "data/rds/mpsz.rds")
+```
 
 ## Combining Busstop and mpsz
 
@@ -136,6 +142,7 @@ od_data <- read_rds("data/rds/od_data.rds")
 # Visualising Spatial Interaction
 
 ## Removing intra-zonal flows
+
 ```{r}
 od_data1 <- od_data[od_data$ORIGIN_SZ!=od_data$DESTIN_SZ,]
 ```
@@ -174,18 +181,3 @@ tm_shape() +
            n = 6,
            alpha = 0.3)
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

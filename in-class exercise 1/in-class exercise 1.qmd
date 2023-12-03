@@ -1,10 +1,8 @@
-
 ---
 title: "in-class exercise 1 demo"
 author: "xu lin"
 date: 2023-11-18
 ---
-
 
 ##getting start
 

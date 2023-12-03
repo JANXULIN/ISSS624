@@ -11,12 +11,7 @@ This is the overview paragraph.
 
 This is the getting start paragraph
 
-
-```{r setup, include=FALSE}
-options(repos = c(CRAN = "https://cran.rstudio.com/"))
-if (!requireNamespace("pacman", quietly = TRUE)) {
-  install.packages("pacman")
-}
+```{r}
 pacman::p_load(sf, spdep, tmap, tidyverse, knitr)
 ```
 
