@@ -18,7 +18,9 @@ website:
           - text: in-class exercise 1
             href: in-class exercise 1/in-class exercise 1.qmd
           - text: in-class exercise 2
-            href: in-class exercise 2/in-class exercise 2.qmd           
+            href: in-class exercise 2/in-class exercise 2.qmd 
+          - text: in-class exercise 3
+            href: in-class exercise 3/in-class exercise 3.qmd     
       - text: take home exercise 
         menu: 
           - text: take home exercise 1 
