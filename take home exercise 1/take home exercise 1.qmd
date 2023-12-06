@@ -701,8 +701,7 @@ tm_shape(lisa_sig) +
   tm_borders(alpha = 0.4)
 ```
 
-##Conclusion
-In the complete LISA (Local Indicators of Spatial Association) analysis, we utilize two metrics to identify spatial patterns. Initially, we examine the p-values (displayed in the right-hand map) to determine areas with statistically significant spatial autocorrelation. Regions with p-values less than 0.05 suggest that observed values are unlikely to be randomly distributed and instead exhibit significant spatial correlation with surrounding areas. These significant clusters indicate some form of spatial interaction or mutual influence, potentially due to a combination of geographical, social, economic, or other environmental factors.We need focus on the High-Low and Low-High areas, as these regions are somewhat anomalous compared to others.
+##Conclusion In the complete LISA (Local Indicators of Spatial Association) analysis, we utilize two metrics to identify spatial patterns. Initially, we examine the p-values (displayed in the right-hand map) to determine areas with statistically significant spatial autocorrelation. Regions with p-values less than 0.05 suggest that observed values are unlikely to be randomly distributed and instead exhibit significant spatial correlation with surrounding areas. These significant clusters indicate some form of spatial interaction or mutual influence, potentially due to a combination of geographical, social, economic, or other environmental factors.We need focus on the High-Low and Low-High areas, as these regions are somewhat anomalous compared to others.
 
 Subsequently, we assess the values of the Local Moran's I (depicted in the left-hand map). Here, positive values denote spatial clusters, indicating similarity in observed values between a region and its neighbors. Negative values reveal spatial outliers, where a region's values significantly differ from its surroundings, which may highlight unique characteristics or conditions of that area. Further analysis enables us to explore the potential causes behind these clusters and outliers, as well as their specific impacts on the study area.
 
@@ -1118,4 +1117,5 @@ tm_shape(HCSA_sig) +
 ```
 
 ## Conclusion
+
 Through the hot and cold spot analysis, there are four areas with notably high GI values that we can focus on in subsequent analyses. Due to the lack of relevant economic and environmental information, we can only determine that these four areas significantly exceed the average level. Moving forward, we can delve into the reasons behind this by gathering more data and documentation.
