@@ -1,0 +1,71 @@
+---
+title: "in-class exercise 4"
+author: "Xu Lin"
+---
+
+```{r}
+pacman:: p_load(tidyverse, sf, tmap, httr)
+```
+
+```{r}
+csv <- read_csv("data/aspatial/Generalinformationofschools.csv")
+postcode<- csv$"postal_code"
+
+found<- data.frame()
+not_found<- data.frame()
+
+for(postcode in pastcodes){
+  quuery<- list("search"= "Y", "getAddDetails" = "Y"， "page"= "1")
+  res<- GET(rel, quetryquery)
+  
+  sf(((content(res)$found))[4:13]
+  )else
+    not_found = data.frame(postcode)
+
+}
+```
+
+
+```{r}
+schools<- read_csv(data/aspatial/school.csv)
+  rename(lattitude = "results.LATTITUDE",
+         longitude = "results.LONGITUDE") %>%
+```
+
+```{r}
+schools_sf <- st_as_sf(schools,
+                       coords = c("longitude", "lattitude"),
+                       crs= 4326) %>%
+st_transform(crs = 3414)
+```
+
+```{r}
+od_data <-left_join(odbus6_9, busstop_mpsz,
+                    by + c())
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
