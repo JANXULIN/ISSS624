@@ -13,6 +13,8 @@ website:
           href: hands-on exercise 2/hands-on exercise 2.html
         - text: hands-on exercise 3 
           href: hands-on exercise 3/hands-on exercise 3.html
+        - text: hands-on exercise 4 
+          href: hands-on exercise 4/hands-on exercise 4.html
       - text: In-calss Exercise 
         menu: 
           - text: in-class exercise 1
@@ -20,11 +22,15 @@ website:
           - text: in-class exercise 2
             href: in-class exercise 2/in-class exercise 2.qmd 
           - text: in-class exercise 3
-            href: in-class exercise 3/in-class exercise 3.qmd     
+            href: in-class exercise 3/in-class exercise 3.qmd
+          - text: in-class exercise 4
+            href: in-class exercise 4/in-class exercise 4.qmd    
       - text: take home exercise 
         menu: 
           - text: take home exercise 1 
             href: take home exercise 1/take home exercise 1.html
+          - text: take home exercise 2 
+            href: take home exercise 2/take home exercise 2.html
     right:
       - href: index.qmd
         text: Home
