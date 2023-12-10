@@ -72,6 +72,7 @@ mpsz
 ```
 
 # Geospatial data wrangling
+
 ```{r}
 mpsz <- write_rds(mpsz, "data/rds/mpsz.rds")
 ```

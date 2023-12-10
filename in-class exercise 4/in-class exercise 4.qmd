@@ -8,64 +8,128 @@ pacman:: p_load(tidyverse, sf, tmap, httr)
 ```
 
 ```{r}
-csv <- read_csv("data/aspatial/Generalinformationofschools.csv")
-postcode<- csv$"postal_code"
+url<-"https://www.onemap.gov.sg/api/common/elastic/search"
 
-found<- data.frame()
-not_found<- data.frame()
+csv<-read_csv("data/aspatial/Generalinformationofschools.csv")
+postcodes<-csv$`postal_code`
 
-for(postcode in pastcodes){
-  quuery<- list("search"= "Y", "getAddDetails" = "Y"， "page"= "1")
-  res<- GET(rel, quetryquery)
+found<-data.frame()
+not_found<-data.frame()
+
+for(postcode in postcodes){
+  query<-list('searchVal'=postcode,'returnGeom'='Y','getAddrDetails'='Y','pageNum'='1')
+  res<- GET(url,query=query)
   
-  sf(((content(res)$found))[4:13]
-  )else
+  if((content(res)$found)!=0){
+    found<-rbind(found,data.frame(content(res))[4:13])
+  } else{
     not_found = data.frame(postcode)
-
+  }
 }
 ```
 
-
 ```{r}
-schools<- read_csv(data/aspatial/school.csv)
-  rename(lattitude = "results.LATTITUDE",
-         longitude = "results.LONGITUDE") %>%
+merged = merge(csv, found, by.x = 'postal_code', by.y = 'results.POSTAL', all = TRUE)
+write.csv(merged, file = "data/aspatial/schools.csv")
+write.csv(not_found, file = "data/aspatial/not_found.csv")
 ```
 
 ```{r}
-schools_sf <- st_as_sf(schools,
-                       coords = c("longitude", "lattitude"),
-                       crs= 4326) %>%
-st_transform(crs = 3414)
+schools <- read_csv("data/aspatial/schools.csv") %>%
+  rename(latitude = "results.LATITUDE",
+         longitude = "results.LONGITUDE")%>%
+  select(postal_code, school_name, latitude, longitude)
 ```
 
 ```{r}
-od_data <-left_join(odbus6_9, busstop_mpsz,
-                    by + c())
+schools_no_missing <- schools[complete.cases(schools[, c("longitude", "latitude")]), ]
+schools_sf <- st_as_sf(schools_no_missing, 
+                       coords = c("longitude", "latitude"),
+                       crs = 4326) %>%
+               st_transform(crs = 3414)
 
+```
 
+```{r}
+mpsz <- st_read(dsn = "data/geospatial/",
+                layer = "MPSZ-2019") %>%
+  st_transform(crs = 3414)
+```
 
+```{r}
+tmap_options(check.and.fix = TRUE)
+tm_shape(mpsz) +
+  tm_polygons() +
+tm_shape(schools_sf) +
+  tm_dots()
+```
 
+```{r}
+mpsz$`SCHOOL_COUNT`<- lengths(
+  st_intersects(
+    mpsz, schools_sf))
+```
 
+```{r}
+summary(mpsz$SCHOOL_COUNT)
+```
 
+```{r}
+business_sf <- st_read(dsn = "data/geospatial",
+                      layer = "Business")
+```
 
+```{r}
+tmap_options(check.and.fix = TRUE)
+tm_shape(mpsz) +
+  tm_polygons() +
+tm_shape(business_sf) +
+  tm_dots()
+```
 
+```{r}
+mpsz$`BUSINESS_COUNT`<- lengths(
+  st_intersects(
+    mpsz, business_sf))
+```
 
+```{r}
+summary(mpsz$BUSINESS_COUNT)
+```
 
+```{r}
+flow_data <- read_rds("data/rds/flow_data_tidy.rds")
+flow_data
+```
 
+```{r}
+flow_data <- flow_data %>%
+  left_join(mpsz_tidy,
+            by = c("DESTIN_SZ" = "SUBZONE_C")) %>%
+  rename(TRIPS = MORNING_PEAK,
+         DIST = dist)
+```
 
+```{r}
+summary(flow_data)
+```
 
+```{r}
+flow_data$SCHOOL_COUNT <- ifelse(
+  flow_data$SCHOOL_COUNT == 0,
+  0.99, flow_data$SCHOOL_COUNT)
+flow_data$BUSINESS_COUNT <- ifelse(
+  flow_data$BUSINESS_COUNT == 0,
+  0.99, flow_data$BUSINESS_COUNT)
+```
 
+```{r}
+summary(flow_data)
+```
 
-
-
-
-
-
-
-
-
-
-
+```{r}
+write_rds(flow_data,
+          "data/rds/flow_data_tidy.rds")
+```
 
 

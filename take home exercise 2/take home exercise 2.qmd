@@ -3,21 +3,56 @@ title: "take home exercise 2 Singapore public bus commuter flows"
 author: "Xu Lin"
 ---
 
-#overview
-We currently have data on people's movement patterns as well as information on schools, businesses, and retail activities in different areas. The goal of this task is to identify common Saturday activities among the population. Through our analysis, we aim to provide recommendations to the government, suggesting potential enhancements to existing facilities or proposing the development of new amenities that align with people's preferences. The objective is to make these facilities more appealing and strategically located for the community's convenience.
+#overview We currently have data on people's movement patterns as well as information on schools, businesses, and retail activities in different areas. The goal of this task is to identify common Saturday activities among the population. Through our analysis, we aim to provide recommendations to the government, suggesting potential enhancements to existing facilities or proposing the development of new amenities that align with people's preferences. The objective is to make these facilities more appealing and strategically located for the community's convenience.
 
-#Objective
-Our goal is to pinpoint popular weekend destinations, analyze the main facilities in those areas, and provide recommendations accordingly.
+#Objective Our goal is to pinpoint popular weekend destinations, analyze the main facilities in those areas, and provide recommendations accordingly.
 
-#Data
-Geospatial data: Passenger Volume by Origin Destination Bus Stops, Bus Stop Location, Train Station and Train Station Exit Point, Master Plan 2019 Subzone Boundary, HDB Property Information, Business, Entertn, F&B, FinServ, Leisure&Recreation and Retails. Aspatial data: HDB Property Information. This data is for us to use. 
+#Data Geospatial data: Passenger Volume by Origin Destination Bus Stops, Bus Stop Location, Train Station and Train Station Exit Point, Master Plan 2019 Subzone Boundary, HDB Property Information, Business, Entertn, F&B, FinServ, Leisure&Recreation and Retails. Aspatial data: HDB Property Information. This data is for us to use.
 
-#Import the data 
+#Import the data
+
 ```{r}
 pacman::p_load(tmap, sf, DT, stplanr,
                performance,
-               ggpubr, tidyverse, xml)
+               ggpubr, tidyverse, xml, mapview)
 ```
+
+#Importing the OD data
+
+```{r}
+odbus <- read_csv("data/aspatial/origin_destination_bus_202310.csv")
+```
+
+```{r}
+odbus$ORIGIN_PT_CODE <- as.factor(odbus$ORIGIN_PT_CODE)
+odbus$DESTINATION_PT_CODE <- as.factor(odbus$DESTINATION_PT_CODE) 
+```
+
+```{r}
+glimpse(odbus)
+```
+
+```{r}
+weekendmorning11_14 <- odbus %>%
+  filter(DAY_TYPE == "WEEKENDS/HOLIDAY") %>%
+  filter(TIME_PER_HOUR >= 11 & TIME_PER_HOUR <= 14) %>%
+  group_by(ORIGIN_PT_CODE, DESTINATION_PT_CODE) %>%
+  summarise(TRIPS = sum(TOTAL_TRIPS), .groups = 'keep')
+```
+
+```{r}
+datatable(weekendmorning11_14)
+```
+
+```{r}
+write_rds(weekendmorning11_14, "data/rds/weekendmorning11_14.rds")
+```
+
+```{r}
+weekendmorning11_14 <- read_rds("data/rds/weekendmorning11_14.rds")
+```
+
+#Working with Geospatial Data
 
 ```{r}
 busstop <- st_read(dsn = "data/geospatial", layer = "BusStop") %>%
@@ -29,119 +64,83 @@ glimpse(busstop)
 ```
 
 ```{r}
-odbus <- read_csv("data/aspatial/origin_destination_bus_202310.csv")
+busstop_points = busstop %>%
+  st_as_sf(coords = c("geometry"), crs = 3414, remove = FALSE)
 ```
 
 ```{r}
-odbus$ORIGIN_PT_CODE <- as.factor(odbus$ORIGIN_PT_CODE)
-odbus$DESTINATION_PT_CODE <- as.factor(odbus$ORIGIN_PT_CODE)
+mapview_busstop_points = mapview(busstop_points, cex = 0.5, alpha = .5, popup = NULL)
+mapview_busstop_points
 ```
 
 ```{r}
-glimpse(odbus)
-```
-
-```{r}
-weekendmorning11_14 <- odbus %>%
-  filter(DAY_TYPE == "WEEKENDS/HOLIDAY") %>%
-  filter(TIME_PER_HOUR >= 11 &
-           TIME_PER_HOUR <= 14) %>%
-  group_by(ORIGIN_PT_CODE) %>%
-  summarise(TRIPS = sum(TOTAL_TRIPS))
-```
-
-```{r}
-kable(head(weekendmorning11_14))
-```
-
-```{r}
-weekendmorning11_14_summarized <- weekendmorning11_14 %>%
-  group_by(ORIGIN_PT_CODE) %>%
-  summarise(TotalTrips = sum(TRIPS))
-```
-
-```{r}
-if (!dir.exists("data/rds")) {
-  dir.create("data/rds", recursive = TRUE)
-}
-```
-
-```{r}
-write_rds(weekendmorning11_14_summarized, "data/rds/weekendmorning11_14_summarized.rds")
-```
-
-```{r}
-weekendmorning11_14_summarized <- read_rds("data/rds/weekendmorning11_14_summarized.rds")
-```
-
-```{r}
-busstops_weekend_morning <- left_join(busstop, weekendmorning11_14_summarized, by = c("BUS_STOP_N" = "ORIGIN_PT_CODE"))
-```
-
-```{r}
-hexagon_grid_weekend_morning <- st_make_grid(busstops_weekend_morning, cellsize = c(375, 375), what = "polygons", square = FALSE)
-hexagon_grid_sf_weekend_morning <- st_sf(geometry = hexagon_grid_weekend_morning) %>%
-  mutate(grid_id = 1:length(lengths(hexagon_grid_weekend_morning)))
-```
-
-```{r}
-intersects_list_weekend_morning <- st_intersects(hexagon_grid_sf_weekend_morning, busstops_weekend_morning)
-total_trips_weekend_morning <- purrr::map_dbl(intersects_list_weekend_morning, ~sum(busstops_weekend_morning$TotalTrips[.x], na.rm = TRUE))
-hexagon_grid_sf_weekend_morning$TotalTrips <- total_trips_weekend_morning
-hexagon_count_totaltrips_weekend_morning <- hexagon_grid_sf_weekend_morning %>%
-  filter(TotalTrips > 0)
+area_honeycomb_grid = st_make_grid(busstop_points, c(375, 375), what = "polygons", square = FALSE)
+honeycomb_grid_sf = st_sf(area_honeycomb_grid) %>%
+  mutate(grid_id = 1:length(lengths(area_honeycomb_grid)))
+honeycomb_grid_sf$n_colli = lengths(st_intersects(honeycomb_grid_sf, busstop_points))
+honeycomb_count = filter(honeycomb_grid_sf, n_colli > 0)
 ```
 
 ```{r}
 tmap_mode("view")
-map_honeycomb_weekend_morning <- tm_shape(hexagon_count_totaltrips_weekend_morning) +
+map_honeycomb = tm_shape(honeycomb_count) +
   tm_fill(
-    col = "TotalTrips",  
+    col = "n_colli",
     palette = "Reds",
     style = "cont",
-    title = "Number of TotalTrips - Weekend Morning", 
+    title = "Number of collisions",
+    id = "grid_id",
     showNA = FALSE,
     alpha = 0.6,
-    popup.vars = c("Number of TotalTrips: " = "TotalTrips"),
-    popup.format = list(TotalTrips = list(format = "f", digits = 0))
+    popup.vars = c(
+      "Number of collisions: " = "n_colli"
+    ),
+    popup.format = list(
+      n_colli = list(format = "f", digits = 0)
+    )
   ) +
   tm_borders(col = "grey40", lwd = 0.7)
-map_honeycomb_weekend_morning
-tmap_mode("plot")
+map_honeycomb
 ```
 
+```{r}
+busstop_honeycomb_count <- st_intersection(busstop, honeycomb_count) %>%
+  select(BUS_STOP_N, grid_id) %>%
+  st_drop_geometry()
+```
 
+```{r}
+glimpse(busstop_honeycomb_count)
+```
 
+```{r}
+write_rds(busstop_honeycomb_count, "data/rds/busstop_honeycomb_count.rds")  
+```
 
+```{r}
+od_data <- left_join(weekendmorning11_14 , busstop_honeycomb_count,
+            by = c("ORIGIN_PT_CODE" = "BUS_STOP_N")) %>%
+  rename(ORIGIN_BS = ORIGIN_PT_CODE,
+         ORIGIN_SZ = grid_id,
+         DESTIN_BS = DESTINATION_PT_CODE)
+```
 
+```{r}
+duplicate <- od_data %>%
+  group_by_all() %>%
+  filter(n()>1) %>%
+  ungroup()
+```
 
+```{r}
+od_data <- unique(od_data)
+```
 
+```{r}
+od_data <- left_join(od_data , busstop_honeycomb_count,
+            by = c("DESTIN_BS" = "BUS_STOP_N")) 
+```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+```{r}
+glimpse(od_data)
+```
