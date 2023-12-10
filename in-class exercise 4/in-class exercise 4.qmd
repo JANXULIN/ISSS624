@@ -103,6 +103,12 @@ flow_data
 ```
 
 ```{r}
+mpsz_tidy <- mpsz %>%
+  st_drop_geometry() %>%
+  select(SUBZONE_C, SCHOOL_COUNT, BUSINESS_COUNT)
+```
+
+```{r}
 flow_data <- flow_data %>%
   left_join(mpsz_tidy,
             by = c("DESTIN_SZ" = "SUBZONE_C")) %>%
@@ -114,20 +120,4 @@ flow_data <- flow_data %>%
 summary(flow_data)
 ```
 
-```{r}
-flow_data$SCHOOL_COUNT <- ifelse(
-  flow_data$SCHOOL_COUNT == 0,
-  0.99, flow_data$SCHOOL_COUNT)
-flow_data$BUSINESS_COUNT <- ifelse(
-  flow_data$BUSINESS_COUNT == 0,
-  0.99, flow_data$BUSINESS_COUNT)
-```
 
-```{r}
-summary(flow_data)
-```
-
-```{r}
-write_rds(flow_data,
-          "data/rds/flow_data_tidy.rds")
-```
