@@ -190,4 +190,20 @@ tm_shape() +
            alpha = 0.3)
 ```
 
+```{r}
+tm_shape(honeycomb_count) +
+  tm_polygons() +
+flowLine %>%  
+  filter(WEEKENDDAYMORNING_PEAK >= 2000) %>%
+tm_shape() +
+  tm_lines(lwd = "WEEKENDDAYMORNING_PEAK",
+           style = "quantile",
+           scale = c(0.1, 1, 3, 5, 7, 10),
+           n = 6,
+           alpha = 0.3)
+```
+
+
+
+
 
