@@ -3,6 +3,7 @@ title: "take home exercise 2 Singapore public bus commuter flows"
 author: "Xu Lin"
 ---
 
+
 #overview We currently have data on people's movement patterns as well as information on schools, businesses, and retail activities in different areas. The goal of this task is to identify common Saturday activities among the population. Through our analysis, we aim to provide recommendations to the government, suggesting potential enhancements to existing facilities or proposing the development of new amenities that align with people's preferences. The objective is to make these facilities more appealing and strategically located for the community's convenience.
 
 #Objective Our goal is to pinpoint popular weekend destinations, analyze the main facilities in those areas, and provide recommendations accordingly.
@@ -11,13 +12,16 @@ author: "Xu Lin"
 
 #Import the data
 
+
 ```{r}
 pacman::p_load(tmap, sf, DT, stplanr, sp, dplyr,
                performance, reshape2, units, 
                ggpubr, tidyverse, mapview, httr, sfheaders, knitr, kableExtra)
 ```
 
+
 #Importing the OD data
+
 
 ```{r}
 odbus <- read_csv("data/aspatial/origin_destination_bus_202310.csv")
@@ -52,7 +56,9 @@ write_rds(weekendmorning11_14, "data/rds/weekendmorning11_14.rds")
 weekendmorning11_14 <- read_rds("data/rds/weekendmorning11_14.rds")
 ```
 
+
 #Working with Geospatial Data
+
 ```{r}
 busstop <- st_read(dsn = "data/geospatial", layer = "BusStop") %>%
   st_transform(crs = 3414)
@@ -202,7 +208,9 @@ tm_shape() +
            alpha = 0.3)
 ```
 
+
 # Caculate the distance 
+
 ```{r}
 honeycomb_count <- read_rds("data/rds/honeycomb_count.rds")
 honeycomb_count
@@ -264,13 +272,11 @@ write_rds(distPair, "data/rds/distPair.rds")
 weekendmorning11_14 <- read_rds("data/rds/weekendmorning11_14.rds")
 ```
 
-
 ```{r}
 flow_data <- weekendmorning11_14 %>%
   group_by(ORIGIN_SZ, DESTIN_SZ) %>% 
   summarize(TRIPS = sum(WEEKENDDAYMORNING_PEAK)) 
 ```
-
 
 ```{r}
 head(flow_data)
@@ -313,7 +319,9 @@ write_rds(flow_data1,
           "data/rds/flow_data1.rds")
 ```
 
+
 # Make flow data with weekend activies
+
 ```{r}
 url<-"https://www.onemap.gov.sg/api/common/elastic/search"
 
@@ -375,7 +383,9 @@ honeycomb_count$`SCHOOL_COUNT`<- lengths(
 summary(honeycomb_count$SCHOOL_COUNT)
 ```
 
+
 ##公交站转换
+
 ```{r}
 RTSS_sf <- st_read(dsn = "data/geospatial/",
                 layer = "RapidTransitSystemStation")%>%
@@ -406,7 +416,9 @@ honeycomb_count$`RTSS_COUNT`<- lengths(
 summary(honeycomb_count$`RTSS_COUNT`)
 ```
 
+
 ## entertn
+
 ```{r}
 entertn_sf <- st_read(dsn = "data/geospatial/",
                 layer = "entertn")%>%
@@ -433,7 +445,9 @@ honeycomb_count$`ENTERTN_COUNT`<- lengths(
 summary(honeycomb_count$ENTERTN_COUNT)
 ```
 
+
 ## Liesure&Recreation
+
 ```{r}
 lr_sf <- st_read(dsn = "data/geospatial/",
                                     layer = "Liesure&Recreation") %>%
@@ -460,7 +474,9 @@ honeycomb_count$`LR_COUNT`<- lengths(
 summary(honeycomb_count$LR_COUNT)
 ```
 
+
 ##Retails 
+
 ```{r}
 retails_sf <- st_read(dsn = "data/geospatial/",
                 layer = "Retails")%>%
@@ -487,7 +503,9 @@ honeycomb_count$`RETAILS_COUNT`<- lengths(
 summary(honeycomb_count$RETAILS_COUNT)
 ```
 
+
 #数据整合
+
 ```{r}
 honeycomb_count_tidy <- honeycomb_count %>%
   st_drop_geometry() %>%
@@ -531,7 +549,9 @@ write_rds(flow_data1,
           "data/rds/flow_data_tidy.rds")
 ```
 
+
 ##SIM
+
 ```{r}
 flow_data2 <- read_rds("data/rds/flow_data_tidy.rds")
 ```
@@ -539,6 +559,7 @@ flow_data2 <- read_rds("data/rds/flow_data_tidy.rds")
 ```{r}
 glimpse(flow_data2)
 ```
+
 ```{r}
 kable(head(flow_data2[, 1:5], n = 5))
 ```
@@ -583,7 +604,9 @@ CalcRSquared <- function(observed, estimated){
 CalcRSquared(orcSIM_Poisson$data$TRIPS, orcSIM_Poisson$fitted.values)
 ```
 
+
 ##Model
+
 ```{r}
 dbcSIM_Poisson <- glm(formula = TRIPS ~ 
                 ORIGIN_SZ + 
@@ -611,7 +634,9 @@ compare_performance(model_list,
                     metrics = "RMSE")
 ```
 
+
 ##Visualising
+
 ```{r}
 df <- as.data.frame(orcSIM_Poisson$fitted.values) %>%
   round(digits = 0)
@@ -646,9 +671,4 @@ ggarrange(orc_p, dbc_p,
           ncol = 2,
           nrow = 1)
 ```
-
-
-
-
-
 
