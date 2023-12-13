@@ -567,30 +567,5 @@ inter_zonal_flow <- flow_data2 %>%
   filter(FlowNoIntra > 0)
 ```
 
-```{r}
-orcSIM_Poisson <- glm(formula = TRIPS ~ 
-                ORIGIN_SZ +
-                log(SCHOOL_COUNT) +  
-                log(RTSS_COUNT) + 
-                log(LR_COUNT) +
-                log(DIST) - 1,
-              family = poisson(link = "log"),
-              data = inter_zonal_flow,
-              na.action = na.exclude)
-summary(orcSIM_Poisson)
-```
 
-```{r}
-CalcRSquared <- function(observed, estimated){
-  r <- cor(observed, estimated)
-  R2 <- r^2
-  R2
-}
-```
-
-```{r}
-CalcRSquared(orcSIM_Poisson$data$TRIPS, orcSIM_Poisson$fitted.values)
-```
-
-##Model
 
