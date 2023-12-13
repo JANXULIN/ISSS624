@@ -542,7 +542,7 @@ flow_data2 <- read_rds("data/rds/flow_data_tidy.rds")
 
 ```{r}
 flow_data2 <- flow_data2 %>%
-  mutate(ORIGIN_SZ = as.character(ORIGIN_SZ))
+  mutate(ORIGIN_SZ = as.character(ORIGIN_SZ), DESTIN_SZ = as.character(DESTIN_SZ))
 ```
 
 ```{r}
