@@ -203,7 +203,6 @@ hexagon_count_busstops_weekday_morning = filter(hexagon_grid_sf_weekday_morning,
 ```
 
 ```{r}
-tmap_mode("view")
 map_honeycomb <- tm_shape(hexagon_count_busstops_weekday_morning) +
   tm_fill(
     col = "n_colli",  
@@ -222,6 +221,7 @@ map_honeycomb <- tm_shape(hexagon_count_busstops_weekday_morning) +
   ) +
   tm_borders(col = "grey40", lwd = 0.7)
 map_honeycomb
+tmap_mode("plot")
 ```
 
 ## Draw 4 peak time maps
@@ -307,7 +307,6 @@ hexagon_count_totaltrips_weekend_evening <- hexagon_grid_sf_weekend_evening %>%
 ```
 
 ```{r}
-tmap_mode("view")
 map_honeycomb_weekend_evening <- tm_shape(hexagon_count_totaltrips_weekend_evening)+
   tm_fill(
     col = "TotalTrips",  
@@ -321,6 +320,7 @@ map_honeycomb_weekend_evening <- tm_shape(hexagon_count_totaltrips_weekend_eveni
   ) +
   tm_borders(col = "grey40", lwd = 0.7)
 map_honeycomb_weekend_evening
+tmap_mode("plot")
 ```
 
 ## Conclusion
