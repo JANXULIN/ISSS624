@@ -3,13 +3,29 @@ title: "take home exercise 2 Singapore public bus commuter flows"
 author: "Xu Lin"
 ---
 
-#overview We currently have data on people's movement patterns as well as information on schools, businesses, and retail activities in different areas. The goal of this task is to identify common Saturday activities among the population. Through our analysis, we aim to provide recommendations to the government, suggesting potential enhancements to existing facilities or proposing the development of new amenities that align with people's preferences. The objective is to make these facilities more appealing and strategically located for the community's convenience.
+# overview 
 
-#Objective Our goal is to pinpoint popular weekend destinations, analyze the main facilities in those areas, and provide recommendations accordingly.
+We currently have data on people's movement patterns as well as information on schools, businesses, and retail activities in different areas. The goal of this task is to identify common Saturday activities among the population. Through our analysis, we aim to provide recommendations to the government, suggesting potential enhancements to existing facilities or proposing the development of new amenities that align with people's preferences. The objective is to make these facilities more appealing and strategically located for the community's convenience.
 
-#Data Geospatial data: Passenger Volume by Origin Destination Bus Stops, Bus Stop Location, Train Station and Train Station Exit Point, Master Plan 2019 Subzone Boundary, HDB Property Information, Business, Entertn, F&B, FinServ, Leisure&Recreation and Retails. Aspatial data: HDB Property Information. This data is for us to use.
+# Objective 
 
-#Import the data
+Our goal is to pinpoint popular weekend destinations, analyze the main facilities in those areas, and provide recommendations accordingly.
+
+# Data Geospatial data: 
+
+Passenger Volume by Origin Destination Bus Stops, Bus Stop Location, Train Station and Train Station Exit Point, Master Plan 2019 Subzone Boundary, HDB Property Information, Business, Entertn, F&B, FinServ, Leisure&Recreation and Retails. Aspatial data: HDB Property Information. This data is for us to use.
+
+# Mmethodology ：
+
+1，Prepare hexagonal data.
+2，Draw the flow data map for Saturday morning.
+3，Prepare the destination data for customer activities on Saturday.
+4，Data integration.
+5，Model.
+6，Visualization.
+7, Limitation
+
+# 1，Prepare hexagonal data.
 
 ```{r}
 pacman::p_load(tmap, sf, DT, stplanr, sp, dplyr,
@@ -17,7 +33,7 @@ pacman::p_load(tmap, sf, DT, stplanr, sp, dplyr,
                ggpubr, tidyverse, mapview, httr, sfheaders, knitr, kableExtra)
 ```
 
-#Importing the OD data
+## Importing the OD data
 
 ```{r}
 odbus <- read_csv("data/aspatial/origin_destination_bus_202310.csv")
@@ -52,7 +68,7 @@ write_rds(weekendmorning11_14, "data/rds/weekendmorning11_14.rds")
 weekendmorning11_14 <- read_rds("data/rds/weekendmorning11_14.rds")
 ```
 
-#Working with Geospatial Data
+## busstop points
 
 ```{r}
 busstop <- st_read(dsn = "data/geospatial", layer = "BusStop") %>%
@@ -74,11 +90,15 @@ mapview_busstop_points
 ```
 
 ```{r}
-area_honeycomb_grid = st_make_grid(busstop_points, c(375, 375), what = "polygons", square = FALSE)
+area_honeycomb_grid = st_make_grid(busstop_points, c(750, 750), what = "polygons", square = FALSE)
 honeycomb_grid_sf = st_sf(area_honeycomb_grid) %>%
   mutate(grid_id = 1:length(lengths(area_honeycomb_grid)))
 honeycomb_grid_sf$n_colli = lengths(st_intersects(honeycomb_grid_sf, busstop_points))
 honeycomb_count = filter(honeycomb_grid_sf, n_colli > 0)
+```
+
+```{r}
+write_rds(honeycomb_count, "data/rds/honeycomb_count.rds")
 ```
 
 ```{r}
@@ -100,7 +120,6 @@ map_honeycomb = tm_shape(honeycomb_count) +
   ) +
   tm_borders(col = "grey40", lwd = 0.7)
 map_honeycomb
-tmap_mode("plot")
 ```
 
 ```{r}
@@ -116,6 +135,8 @@ glimpse(busstop_honeycomb_count)
 ```{r}
 write_rds(busstop_honeycomb_count, "data/rds/busstop_honeycomb_count.rds")  
 ```
+
+# 2,Draw the flow data map for Saturday morning.
 
 ```{r}
 weekendmorning11_14 <- left_join(weekendmorning11_14 , busstop_honeycomb_count,
@@ -203,7 +224,7 @@ tm_shape() +
            alpha = 0.3)
 ```
 
-# Caculate the distance
+## Caculate the distance
 
 ```{r}
 honeycomb_count <- read_rds("data/rds/honeycomb_count.rds")
@@ -288,6 +309,9 @@ flow_data$offset <- ifelse(
 ```{r}
 flow_data$ORIGIN_SZ <- as.integer(flow_data$ORIGIN_SZ)
 flow_data$DESTIN_SZ <- as.integer(flow_data$DESTIN_SZ)
+distPair$orig <- as.integer(distPair$orig)
+distPair$dest <- as.integer(distPair$dest)
+distPair$dist <- as.integer(distPair$dist)
 ```
 
 ```{r}
@@ -295,6 +319,10 @@ flow_data1 <- flow_data %>%
   left_join (distPair,
              by = c("ORIGIN_SZ" = "orig",
                     "DESTIN_SZ" = "dest"))
+```
+
+```{r}
+glimpse(flow_data1)
 ```
 
 ```{r}
@@ -313,7 +341,9 @@ write_rds(flow_data1,
           "data/rds/flow_data1.rds")
 ```
 
-# Make flow data with weekend activies
+#3，Prepare the destination data for customer activities on Saturday.
+
+## Schools
 
 ```{r}
 url<-"https://www.onemap.gov.sg/api/common/elastic/search"
@@ -376,7 +406,7 @@ honeycomb_count$`SCHOOL_COUNT`<- lengths(
 summary(honeycomb_count$SCHOOL_COUNT)
 ```
 
-##公交站转换
+## RapidTransitSystemStation
 
 ```{r}
 RTSS_sf <- st_read(dsn = "data/geospatial/",
@@ -408,7 +438,7 @@ honeycomb_count$`RTSS_COUNT`<- lengths(
 summary(honeycomb_count$`RTSS_COUNT`)
 ```
 
-## entertn
+## Entertn
 
 ```{r}
 entertn_sf <- st_read(dsn = "data/geospatial/",
@@ -462,7 +492,7 @@ honeycomb_count$`LR_COUNT`<- lengths(
 summary(honeycomb_count$LR_COUNT)
 ```
 
-##Retails
+## Retails
 
 ```{r}
 retails_sf <- st_read(dsn = "data/geospatial/",
@@ -486,10 +516,10 @@ honeycomb_count$`RETAILS_COUNT`<- lengths(
 ```
 
 ```{r}
-summary(honeycomb_count$RETAILS_COUNT)
+glimpse(honeycomb_count$RETAILS_COUNT)
 ```
 
-#数据整合
+# 4,Data integration.
 
 ```{r}
 honeycomb_count_tidy <- honeycomb_count %>%
@@ -498,51 +528,9 @@ honeycomb_count_tidy <- honeycomb_count %>%
 ```
 
 ```{r}
-flow_data1 <- flow_data1 %>%
+flow_data2 <- flow_data1 %>%
   left_join(honeycomb_count_tidy,
             by = c("DESTIN_SZ" = "grid_id")) 
-```
-
-```{r}
-summary(flow_data1)
-```
-
-```{r}
-flow_data1$SCHOOL_COUNT <- ifelse(
-  flow_data1$SCHOOL_COUNT == 0,
-  0.99, flow_data1$SCHOOL_COUNT)
-flow_data1$RTSS_COUNT <- ifelse(
-  flow_data1$RTSS_COUNT == 0,
-  0.99, flow_data1$RTSS_COUNT)
-flow_data1$ENTERTN_COUNT <- ifelse(
-  flow_data1$ENTERTN_COUNT == 0,
-  0.99, flow_data1$ENTERTN_COUNT)
-flow_data1$LR_COUNT <- ifelse(
-  flow_data1$LR_COUNT == 0,
-  0.99, flow_data1$LR_COUNT)
-flow_data1$RETAILS_COUNT <- ifelse(
-  flow_data1$RETAILS_COUNT == 0,
-  0.99, flow_data1$RETAILS_COUNT)
-```
-
-```{r}
-summary(flow_data1)
-```
-
-```{r}
-write_rds(flow_data1,
-          "data/rds/flow_data_tidy.rds")
-```
-
-##SIM
-
-```{r}
-flow_data2 <- read_rds("data/rds/flow_data_tidy.rds")
-```
-
-```{r}
-flow_data2 <- flow_data2 %>%
-  mutate(ORIGIN_SZ = as.character(ORIGIN_SZ), DESTIN_SZ = as.character(DESTIN_SZ))
 ```
 
 ```{r}
@@ -550,29 +538,79 @@ glimpse(flow_data2)
 ```
 
 ```{r}
-kable(head(flow_data2[, 1:5], n = 5))
+flow_data2$SCHOOL_COUNT <- ifelse(
+  flow_data2$SCHOOL_COUNT == 0,
+  0.99, flow_data2$SCHOOL_COUNT)
+flow_data2$RTSS_COUNT <- ifelse(
+  flow_data2$RTSS_COUNT == 0,
+  0.99, flow_data2$RTSS_COUNT)
+flow_data2$ENTERTN_COUNT <- ifelse(
+  flow_data2$ENTERTN_COUNT == 0,
+  0.99, flow_data2$ENTERTN_COUNT)
+flow_data2$LR_COUNT <- ifelse(
+  flow_data2$LR_COUNT == 0,
+  0.99, flow_data2$LR_COUNT)
+flow_data2$RETAILS_COUNT <- ifelse(
+  flow_data2$RETAILS_COUNT == 0,
+  0.99, flow_data2$RETAILS_COUNT)
 ```
 
 ```{r}
-flow_data2$FlowNoIntra <- ifelse(
-  flow_data2$ORIGIN_SZ == flow_data2$DESTIN_SZ, 
-  0, flow_data2$TRIPS)
-flow_data2$offset <- ifelse(
-  flow_data2$ORIGIN_SZ == flow_data2$DESTIN_SZ, 
+summary(flow_data2)
+```
+
+```{r}
+write_rds(flow_data2,
+          "data/rds/flow_data_tidy.rds")
+```
+
+```{r}
+flow_data3 <- read_rds("data/rds/flow_data_tidy.rds")
+```
+
+```{r}
+flow_data3 <- flow_data2 %>%
+  mutate(ORIGIN_SZ = as.character(ORIGIN_SZ), DESTIN_SZ = as.character(DESTIN_SZ))
+```
+
+```{r}
+glimpse(flow_data3)
+```
+
+```{r}
+kable(head(flow_data3[, 1:5], n = 5))
+```
+
+```{r}
+flow_data3$FlowNoIntra <- ifelse(
+  flow_data3$ORIGIN_SZ == flow_data3$DESTIN_SZ, 
+  0, flow_data3$TRIPS)
+flow_data3$offset <- ifelse(
+  flow_data3$ORIGIN_SZ == flow_data3$DESTIN_SZ, 
   0.000001, 1)
 ```
 
 ```{r}
-inter_zonal_flow <- flow_data2 %>%
+inter_zonal_flow <- flow_data3 %>%
   filter(FlowNoIntra > 0)
 ```
+
+```{r}
+glimpse(inter_zonal_flow)
+```
+
+# 5,Model
+
+## Origin_Constrained model
 
 ```{r}
 orcSIM_Poisson <- glm(formula = TRIPS ~ 
                 ORIGIN_SZ +
                 log(SCHOOL_COUNT) +  
+                log(ENTERTN_COUNT) +
                 log(RTSS_COUNT) + 
                 log(LR_COUNT) +
+                log(RETAILS_COUNT) +
                 log(DIST) - 1,
               family = poisson(link = "log"),
               data = inter_zonal_flow,
@@ -592,7 +630,12 @@ CalcRSquared <- function(observed, estimated){
 CalcRSquared(orcSIM_Poisson$data$TRIPS, orcSIM_Poisson$fitted.values)
 ```
 
-##Model
+### Conclusion of Origin_Constrained model
+
+Currently, the OM model yields an R-squared value of 44%, indicating that the model explains approximately 44% of the variance in the response variable TRIPS. The significant p-values suggest that the model is effective, as these values indicate statistically significant impacts of the explanatory variables on the response variable. However, given that the fit is only 44%, it is necessary to explore comparisons with different models. This suggests that there might be unexplained variability, possibly due to important variables not included in the model or complex nonlinear relationships not captured by the current model. Therefore, further analysis is required to enhance the explanatory power of the model.
+
+## Doubly_Constrained model
+
 ```{r}
 dbcSIM_Poisson <- glm(formula = TRIPS ~ 
                 ORIGIN_SZ + 
@@ -609,6 +652,10 @@ CalcRSquared(dbcSIM_Poisson$data$TRIPS,
              dbcSIM_Poisson$fitted.values)
 ```
 
+### Conclusion of Doubly_Constrained model
+
+Doubly_Constrained model demonstrates significant statistical strength, with all P-values being less than the 0.05 threshold, indicating a significant positive effect of the variables in the model on the predicted outcomes. The R-squared value of the model is 66.8%, suggesting that it accounts for a substantial portion of the variability in the response variable, indicating a good fit. Additionally, the model required 10 iterations of Fisher Scoring to converge, showing that the model underwent a reasonable number of iterations before reaching the optimal solution. Overall, the performance of this doubly constrained model is quite satisfactory. It effectively captures key features of the data, providing reliable predictions of the response variable. However, given that there is still room for improvement in the residual deviance, further exploration of additional explanatory variables or model adjustments might be needed to optimize performance and enhance explanatory power.
+
 ```{r}
 model_list <- list(
   Origin_Constrained = orcSIM_Poisson,
@@ -619,8 +666,11 @@ model_list <- list(
 compare_performance(model_list,
                     metrics = "RMSE")
 ```
+### Modle Camparation Conclusion 
 
-##Visualising
+The smaller the RMSE value, the smaller the error of the model. From the results, it can be seen that the Doubly Constrained Model (glm) has a smaller error compared to the Origin Constrained Model (glm). Consequently, in terms of performance, the Doubly Constrained Model (glm) is superior to the Origin Constrained Model (glm).
+
+# 6,Visualization.
 
 ```{r}
 df <- as.data.frame(orcSIM_Poisson$fitted.values) %>%
@@ -630,7 +680,18 @@ df <- as.data.frame(orcSIM_Poisson$fitted.values) %>%
 ```{r}
 inter_zonal_flow <- inter_zonal_flow %>%
   cbind(df) %>%
-  rename(dbcTRIPS = "dbcSIM_Poisson.fitted.values")
+  rename(orcTRIPS = "orcSIM_Poisson$fitted.values")
+```
+
+```{r}
+df <- as.data.frame(dbcSIM_Poisson$fitted.values) %>%
+  round(digits = 0)
+```
+
+```{r}
+inter_zonal_flow <- inter_zonal_flow %>%
+  cbind(df) %>%
+  rename(dbcTRIPS1 = "dbcSIM_Poisson$fitted.values")
 ```
 
 ```{r}
@@ -643,7 +704,7 @@ orc_p <- ggplot(data = inter_zonal_flow,
                   ylim=c(0,150000))
 
 dbc_p <- ggplot(data = inter_zonal_flow,
-                aes(x = dbcTRIPS,
+                aes(x = dbcTRIPS1,
                     y = TRIPS)) +
   geom_point() +
   geom_smooth(method = lm) +
@@ -657,9 +718,17 @@ ggarrange(orc_p, dbc_p,
           nrow = 1)
 ```
 
+## Conclusion of Visualization
 
+The chart indicates that the Doubly_Constrained Model has a better fit than the Origin_Constrained Model, as evidenced by the smaller dispersion of points around the trend line, which suggests a lower error in the Doubly_Constrained Model compared to the Origin_Constrained Model.
 
+# 7,Limitations
 
+Limitations: 
+1，We have only compared two models; ideally, we could compare a wider range of models to select the most optimal one.
+2，The data used were selectively chosen, which introduces the possibility of subjective bias in the dataset.
+3，The model could benefit from a stepwise evaluation to determine if reducing the number of variables might increase the fit.
+4，Due to memory limitations, 'mapview' cannot be used and the image lacks boundaries.
 
 
 
